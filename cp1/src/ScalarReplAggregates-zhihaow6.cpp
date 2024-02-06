@@ -30,6 +30,7 @@
 #include "llvm/Transforms/Utils/PromoteMemToReg.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/ADT/DenseSet.h"
 using namespace llvm;
 
 STATISTIC(NumReplaced,  "Number of aggregate allocas broken up");
@@ -52,6 +53,12 @@ namespace {
 
   private:
     // Add fields and helper functions for this pass here.
+    // marked_worklist: add to worklist; only which not in the makred_worklist could be inside the worklist)
+    // executed:                         only not in executed could executre
+    // collect all the alloca instructions
+    DenseSet<AllocaInst *> worklist_alloca;
+    DenseSet<AllocaInst *> marked_worklist_alloca;
+    DenseSet<AllocaInst *> executed_alloca;
   };
 }
 
@@ -60,8 +67,10 @@ char SROA::ID = 0;
 // Public interface to create the ScalarReplAggregates pass.
 // This function is provided to you.
 FunctionPass *createMyScalarReplAggregatesPass() { return new SROA(); }
-INITIALIZE_PASS(SROA, "scalarrepl-zhihaow6",
-                "Scalar Replacement of Aggregates (by zhihaow6)", false, false);
+static RegisterPass<SROA> X("scalarrepl-zhihaow6",
+			    "Scalar Replacement of Aggregates (by zhihaow6)",
+			    false /* does not modify the CFG */,
+			    false /* transformation, not just analysis */);
 
 //===----------------------------------------------------------------------===//
 //                      SKELETON FUNCTION TO BE IMPLEMENTED
@@ -71,13 +80,15 @@ INITIALIZE_PASS(SROA, "scalarrepl-zhihaow6",
 // Entry point for the overall ScalarReplAggregates function pass.
 // This function is provided to you.
 bool SROA::runOnFunction(Function &F) {
-  // worklist: remove purpose
-  // marked_worklist: add purpose, only which not in the makred_worklist could be inside the worklist
-  // collect all the alloca instructions
+  // worklist: remove from worklist  
+  worklist_alloca.clear();
+  marked_worklist_alloca.clear();
+  executed_alloca.clear();
   for (auto &BB : F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
-
+        worklist_alloca.insert(Inst);
+        makred_worklist.insert(Inst);
       }
     }
   }
