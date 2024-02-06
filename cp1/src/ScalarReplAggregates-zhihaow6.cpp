@@ -87,8 +87,8 @@ bool SROA::runOnFunction(Function &F) {
   for (auto &BB : F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
-        worklist_alloca.insert(Inst);
-        makred_worklist.insert(Inst);
+        worklist_alloca.insert(llvm::cast<llvm::AllocaInst>(&Inst));
+        marked_worklist_alloca.insert(llvm::cast<llvm::AllocaInst>(&Inst));
       }
     }
   }
