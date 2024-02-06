@@ -5,7 +5,7 @@ TARGET=trivial
 
 ## replace LLVMROOT and SROALIB as appropriate
 NETID = `whoami`
-LLVMROOT ?= $(HOME)/llvm
+LLVMROOT ?= $(HOME)/llvm-build
 SROALIB  ?= $(LEVEL)/lib/libSROA.so
 
 LLVMGCC = $(LLVMROOT)/bin/clang

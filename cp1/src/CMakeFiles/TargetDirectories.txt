@@ -1,0 +1,6 @@
+/Users/mizhou17/llvm-build/526/cp1/src/CMakeFiles/intrinsics_gen.dir
+/Users/mizhou17/llvm-build/526/cp1/src/CMakeFiles/edit_cache.dir
+/Users/mizhou17/llvm-build/526/cp1/src/CMakeFiles/rebuild_cache.dir
+/Users/mizhou17/llvm-build/526/cp1/src/src/CMakeFiles/SROA.dir
+/Users/mizhou17/llvm-build/526/cp1/src/src/CMakeFiles/edit_cache.dir
+/Users/mizhou17/llvm-build/526/cp1/src/src/CMakeFiles/rebuild_cache.dir

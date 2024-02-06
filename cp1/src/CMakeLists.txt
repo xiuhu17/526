@@ -1,6 +1,6 @@
 add_library(SROA MODULE
     # List your source files here.
-    ScalarReplAggregates-skeleton.cpp
+    ScalarReplAggregates-zhihaow6.cpp
 )
 
 # Use C++11 to compile our pass (i.e., supply -std=c++11).
