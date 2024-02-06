@@ -47,6 +47,7 @@ namespace {
     // will not alter the CFG, so say so.
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.setPreservesCFG();
+
     }
 
   private:
@@ -54,17 +55,13 @@ namespace {
   };
 }
 
+// Create the initializer and register the pass
 char SROA::ID = 0;
-static RegisterPass<SROA> X("scalarrepl-netid",
-			    "Scalar Replacement of Aggregates (by <netid>)",
-			    false /* does not modify the CFG */,
-			    false /* transformation, not just analysis */);
-
-
 // Public interface to create the ScalarReplAggregates pass.
 // This function is provided to you.
 FunctionPass *createMyScalarReplAggregatesPass() { return new SROA(); }
-
+INITIALIZE_PASS(SROA, "scalarrepl-zhihaow6",
+                "Scalar Replacement of Aggregates (by zhihaow6)", false, false);
 
 //===----------------------------------------------------------------------===//
 //                      SKELETON FUNCTION TO BE IMPLEMENTED
@@ -74,9 +71,16 @@ FunctionPass *createMyScalarReplAggregatesPass() { return new SROA(); }
 // Entry point for the overall ScalarReplAggregates function pass.
 // This function is provided to you.
 bool SROA::runOnFunction(Function &F) {
+  // worklist: remove purpose
+  // marked_worklist: add purpose, only which not in the makred_worklist could be inside the worklist
+  // collect all the alloca instructions
+  for (auto &BB : F) {
+    for (auto &Inst : BB) {
+      if (llvm::isa<llvm::AllocaInst>(Inst)) {
 
-  bool Changed = false;
-  return Changed;
-
+      }
+    }
+  }
+  return true;
 }
 
