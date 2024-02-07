@@ -53,6 +53,7 @@ namespace {
 
   private:
     // Add fields and helper functions for this pass here.
+    // worklist: remove from worklist  
     // marked_worklist: add to worklist; only which not in the makred_worklist could be inside the worklist)
     // executed:                         only not in executed could executre
     // collect all the alloca instructions
@@ -80,7 +81,6 @@ static RegisterPass<SROA> X("scalarrepl-zhihaow6",
 // Entry point for the overall ScalarReplAggregates function pass.
 // This function is provided to you.
 bool SROA::runOnFunction(Function &F) {
-  // worklist: remove from worklist  
   worklist_alloca.clear();
   marked_worklist_alloca.clear();
   executed_alloca.clear();
@@ -92,6 +92,46 @@ bool SROA::runOnFunction(Function &F) {
       }
     }
   }
+  return true;
+}
+
+// check the 
+bool Promotable(llvm::Value *Value_Def) {
+  if (!Value_Def) {
+    return false;
+  }
+
+  if (!(Value_Def->getType()->isFPOrFPVectorTy() || Value_Def->getType()->isIntOrIntVectorTy() || Value_Def->getType()->isPtrOrPtrVectorTy())) {
+    return false;
+  }
+
+  for (auto& Value_Use: Value_Def->uses()) {
+    auto *User = Value_Use.getUser();
+    if (User &&  llvm::isa<llvm::Instruction>(User)) {
+      auto User_Inst = llvm::cast<llvm::Instruction>(User);
+      if (llvm::isa<llvm::LoadInst>(User_Inst)) {
+        auto Load_Inst = llvm::cast<llvm::LoadInst>(User_Inst);
+        if (Load_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Load_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      }
+      if (llvm::isa<llvm::StoreInst>(User_Inst)) {
+        auto Store_Inst = llvm::cast<llvm::StoreInst>(User_Inst);
+        if (Store_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Store_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+
   return true;
 }
 
