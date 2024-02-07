@@ -5,13 +5,13 @@ TARGET=trivial
 
 ## replace LLVMROOT and SROALIB as appropriate
 NETID = `whoami`
-LLVMROOT ?= $(HOME)/llvm-build
-SROALIB  ?= $(LEVEL)/lib/libSROA.so
+LLVMROOT ?= $(HOME)/llvm
+SROALIB  = /home/zhihaow6/Desktop/cp1/build/pass/libSROA.so
 
-LLVMGCC = $(LLVMROOT)/bin/clang
-LLVMAS  = $(LLVMROOT)/bin/llvm-as
-LLVMDIS = $(LLVMROOT)/bin/llvm-dis
-LLVMOPT = $(LLVMROOT)/bin/opt
+LLVMGCC = /home/zhihaow6/llvm-project8/bin/clang
+LLVMAS  = /home/zhihaow6/llvm-project8/bin/llvm-as
+LLVMDIS = /home/zhihaow6/llvm-project8/bin/llvm-dis
+LLVMOPT = /home/zhihaow6/llvm-project8/bin/opt
 
 
 ## Other choices: test or comparecfe (these will be provided later)
@@ -40,7 +40,7 @@ test: $(TARGET).test.bc
 
 %.debug.bc: %.llvm.bc
 	$(LLVMOPT) $(DEBUGOPTS) < $< | \
-	$(LLVMOPT) -load $(SROALIB) -scalarrepl-netid -o=$@
+	$(LLVMOPT) -load $(SROALIB) -scalarrepl-zhihaow6 -o=$@
 
 clean:
 	$(RM) -f *.debug.bc *.test.bc *.llvm.bc *.ll

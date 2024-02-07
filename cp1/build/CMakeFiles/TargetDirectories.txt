@@ -1,0 +1,6 @@
+/home/zhihaow6/Desktop/cp1/build/CMakeFiles/intrinsics_gen.dir
+/home/zhihaow6/Desktop/cp1/build/CMakeFiles/edit_cache.dir
+/home/zhihaow6/Desktop/cp1/build/CMakeFiles/rebuild_cache.dir
+/home/zhihaow6/Desktop/cp1/build/pass/CMakeFiles/SROA.dir
+/home/zhihaow6/Desktop/cp1/build/pass/CMakeFiles/edit_cache.dir
+/home/zhihaow6/Desktop/cp1/build/pass/CMakeFiles/rebuild_cache.dir
