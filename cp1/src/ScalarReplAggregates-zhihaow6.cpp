@@ -80,6 +80,50 @@ static RegisterPass<SROA> X("scalarrepl-zhihaow6",
 // Function runOnFunction:
 // Entry point for the overall ScalarReplAggregates function pass.
 // This function is provided to you.
+
+// check whether it is promotable
+bool Promotable(llvm::Value *Value_Def) {
+  if (!Value_Def) {
+    return false;
+  }
+
+  if (!(Value_Def->getType()->isFPOrFPVectorTy() || Value_Def->getType()->isIntOrIntVectorTy() || Value_Def->getType()->isPtrOrPtrVectorTy())) {
+    return false;
+  }
+
+  for (auto& Value_Use: Value_Def->uses()) {
+    auto User = Value_Use.getUser();
+    if (User && llvm::isa<llvm::Instruction>(User)) {
+      auto User_Inst = llvm::cast<llvm::Instruction>(User);
+      if (llvm::isa<llvm::LoadInst>(User_Inst)) {
+        auto Load_Inst = llvm::cast<llvm::LoadInst>(User_Inst);
+        if (Load_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Load_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      } else if (llvm::isa<llvm::StoreInst>(User_Inst)) {
+        auto Store_Inst = llvm::cast<llvm::StoreInst>(User_Inst);
+        if (Store_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Store_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+
+  dbgs() << "Just for testing! \n";
+
+  return true;
+}
+
 bool SROA::runOnFunction(Function &F) {
   worklist_alloca.clear();
   marked_worklist_alloca.clear();
@@ -92,45 +136,16 @@ bool SROA::runOnFunction(Function &F) {
       }
     }
   }
-  return true;
-}
 
-// check the 
-bool Promotable(llvm::Value *Value_Def) {
-  if (!Value_Def) {
-    return false;
-  }
-
-  if (!(Value_Def->getType()->isFPOrFPVectorTy() || Value_Def->getType()->isIntOrIntVectorTy() || Value_Def->getType()->isPtrOrPtrVectorTy())) {
-    return false;
-  }
-
-  for (auto& Value_Use: Value_Def->uses()) {
-    auto *User = Value_Use.getUser();
-    if (User &&  llvm::isa<llvm::Instruction>(User)) {
-      auto User_Inst = llvm::cast<llvm::Instruction>(User);
-      if (llvm::isa<llvm::LoadInst>(User_Inst)) {
-        auto Load_Inst = llvm::cast<llvm::LoadInst>(User_Inst);
-        if (Load_Inst->isVolatile()) {
-          return false;
-        } else {
-          if (Load_Inst->getPointerOperand() != Value_Def) {
-            return false;
-          }
-        }
-      }
-      if (llvm::isa<llvm::StoreInst>(User_Inst)) {
-        auto Store_Inst = llvm::cast<llvm::StoreInst>(User_Inst);
-        if (Store_Inst->isVolatile()) {
-          return false;
-        } else {
-          if (Store_Inst->getPointerOperand() != Value_Def) {
-            return false;
-          }
-        }
+  for (auto &BB : F) {
+    for (auto &Inst : BB) {
+      if (llvm::isa<llvm::AllocaInst>(Inst)) {
+        auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
+        assert(!(Promotable(Alloca_Inst) && !(isAllocaPromotable(Alloca_Inst))));
       }
     }
   }
+
 
   return true;
 }
