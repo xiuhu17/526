@@ -279,4 +279,26 @@ pass/CMakeFiles/SROA.dir/ScalarReplAggregates-zhihaow6.cpp.o: \
  /usr/include/c++/8/bits/std_mutex.h \
  /usr/local/include/llvm/Transforms/Utils/PromoteMemToReg.h \
  /usr/local/include/llvm/Support/Debug.h \
- /usr/local/include/llvm/ADT/Statistic.h
+ /usr/local/include/llvm/ADT/Statistic.h \
+ /usr/local/include/llvm/IR/Dominators.h \
+ /usr/local/include/llvm/ADT/DepthFirstIterator.h \
+ /usr/local/include/llvm/ADT/GraphTraits.h /usr/include/c++/8/set \
+ /usr/include/c++/8/bits/stl_set.h /usr/include/c++/8/bits/stl_multiset.h \
+ /usr/local/include/llvm/IR/CFG.h \
+ /usr/local/include/llvm/IR/PassManager.h \
+ /usr/local/include/llvm/ADT/TinyPtrVector.h \
+ /usr/local/include/llvm/IR/Module.h /usr/local/include/llvm/IR/Comdat.h \
+ /usr/local/include/llvm/IR/DataLayout.h \
+ /usr/local/include/llvm/IR/GlobalAlias.h \
+ /usr/local/include/llvm/IR/GlobalIndirectSymbol.h \
+ /usr/local/include/llvm/IR/GlobalIFunc.h \
+ /usr/local/include/llvm/IR/GlobalVariable.h \
+ /usr/local/include/llvm/Support/CodeGen.h \
+ /usr/local/include/llvm/IR/PassInstrumentation.h \
+ /usr/local/include/llvm/ADT/Any.h \
+ /usr/local/include/llvm/ADT/FunctionExtras.h \
+ /usr/local/include/llvm/Support/TypeName.h \
+ /usr/local/include/llvm/IR/PassManagerInternal.h /usr/include/c++/8/list \
+ /usr/include/c++/8/bits/stl_list.h /usr/include/c++/8/bits/list.tcc \
+ /usr/local/include/llvm/Support/GenericDomTree.h \
+ /usr/local/include/llvm/Support/CFGUpdate.h

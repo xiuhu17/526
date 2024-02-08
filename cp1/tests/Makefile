@@ -43,4 +43,4 @@ test: $(TARGET).test.bc
 	$(LLVMOPT) -load $(SROALIB) -scalarrepl-zhihaow6 -o=$@
 
 clean:
-	$(RM) -f *.debug.bc *.test.bc *.llvm.bc *.ll
+	$(RM) -f *.debug.bc *.test.bc *.llvm.bc *.ll *.s

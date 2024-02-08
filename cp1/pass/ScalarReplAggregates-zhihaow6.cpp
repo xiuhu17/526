@@ -31,6 +31,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/IR/Dominators.h"
 using namespace llvm;
 
 STATISTIC(NumReplaced,  "Number of aggregate allocas broken up");
@@ -44,11 +45,15 @@ namespace {
     // Entry point for the overall scalar-replacement pass
     bool runOnFunction(Function &F);
 
+    // insert the alloca function at the beginning of the funciton
+    AllocaInst* insert_alloca_at_head(Function&F, Type *ty);
+
+
     // getAnalysisUsage - List passes required by this pass.  We also know it
     // will not alter the CFG, so say so.
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.setPreservesCFG();
-
+      AU.addRequired<DominatorTreeWrapperPass>();
     }
 
   private:
@@ -82,7 +87,7 @@ FunctionPass *createMyScalarReplAggregatesPass() { return new SROA(); }
 // This function is provided to you.
 
 // check whether it is promotable
-bool Promotable(llvm::Value *Value_Def) {
+bool Promotable(AllocaInst* Value_Def) {
   if (!Value_Def) {
     return false;
   }
@@ -122,10 +127,70 @@ bool Promotable(llvm::Value *Value_Def) {
   return true;
 }
 
+AllocaInst* Insert_Alloca_At_Head(Function& f, Type *ty) {
+  BasicBlock &entry_bb = f.getEntryBlock();
+  if (entry_bb.empty()) {
+    // Insert "at the end" of this bb
+    return new AllocaInst(ty, 0, "", &entry_bb);
+  } else {
+    // Insert before the first instruction of this bb
+    return new AllocaInst(ty, 0, "", &entry_bb.front());
+  }
+}
+
+inline bool Is_Struct_Alloca(AllocaInst* Value_Def) {
+  auto Value_Def_Tp = Value_Def->getType();
+  return Value_Def_Tp->isStructTy();
+}
+
+bool Is_Expandable(AllocaInst* Value_Def) {
+  if (!Value_Def) {
+    return false;
+  }
+
+  for (auto& Value_Use: Value_Def->uses()) {
+    auto User = Value_Use.getUser();
+    if (User && llvm::isa<llvm::Instruction>(User)) {
+      auto User_Inst = llvm::cast<llvm::Instruction>(User);
+      if (llvm::isa<llvm::LoadInst>(User_Inst)) {
+        auto Load_Inst = llvm::cast<llvm::LoadInst>(User_Inst);
+        if (Load_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Load_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      } else if (llvm::isa<llvm::StoreInst>(User_Inst)) {
+        auto Store_Inst = llvm::cast<llvm::StoreInst>(User_Inst);
+        if (Store_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Store_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      } else if (llvm::isa<BitCastInst>(User)) {
+        continue;        
+      } else if (llvm::isa<GetElementPtrInst>(User)) {
+        
+      } else {
+        return false;
+      }
+    }
+  }
+
+
+  return true;
+}
+
 bool SROA::runOnFunction(Function &F) {
+  // initialization
   worklist_alloca.clear();
   marked_worklist_alloca.clear();
   executed_alloca.clear();
+  DominatorTree& DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+
   for (auto &BB : F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
@@ -135,15 +200,25 @@ bool SROA::runOnFunction(Function &F) {
     }
   }
 
-  for (auto &BB : F) {
-    for (auto &Inst : BB) {
-      if (llvm::isa<llvm::AllocaInst>(Inst)) {
-        auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-        assert(!(Promotable(Alloca_Inst) && !(isAllocaPromotable(Alloca_Inst))));
-      }
-    }
-  }
+  // // test the promotable function
+  // int counter_self = 0, counter_ref = 0;
+  // for (auto &BB : F) {
+  //   for (auto &Inst : BB) {
+  //     if (llvm::isa<llvm::AllocaInst>(Inst)) {
+  //       auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
+  //       assert(!(Promotable(Alloca_Inst) && !(isAllocaPromotable(Alloca_Inst))));
+  //       if (Promotable(Alloca_Inst)) {
+  //         counter_self += 1;
+  //       }
+  //       if (isAllocaPromotable(Alloca_Inst)) {
+  //         counter_ref += 1;
+  //       }
+  //     }
+  //   }
+  // }
 
+  // dbgs() << "Self Find is: " << counter_self << "\n";
+  // dbgs() << "Ref Find is: " << counter_ref << "\n";
 
   return true;
 }
