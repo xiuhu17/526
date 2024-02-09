@@ -10,17 +10,11 @@ typedef struct SimpleStruct { int M; double X; int N;} SimpleStruct;
  */
 int test_func(SimpleStruct input) {
   SimpleStruct input_ = input;
-  input_.M = 12;
-  input_.X = 11.0;
-  input_.N = 19;
   printf("testSimple: %d %f % d\n", input_.M, input_.X, input_.N);
   return 0;
 }
 int test_func_ptr(SimpleStruct* input) {
   SimpleStruct input_ = *input;
-  input_.M = 12;
-  input_.X = 11.0;
-  input_.N = 19;
   printf("testSimple: %d %f % d\n", input_.M, input_.X, input_.N);
   return 0;
 }
@@ -33,14 +27,15 @@ main(int argc, char** argv)
   S.N = 12;
   printf("testSimple: %d %f % d\n", S.M, S.X, S.N);
   test_func(S);
-  test_func(S);
-
   test_func_ptr(&S);
+  // test_func(S);
 
-  test_func(S);
+  // test_func_ptr(&S);
 
-  test_func_ptr(&S);
+  // test_func(S);
 
-  test_func(S);
+  // test_func_ptr(&S);
+
+  // test_func(S);
   return 0;
 }

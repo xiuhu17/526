@@ -86,46 +86,6 @@ FunctionPass *createMyScalarReplAggregatesPass() { return new SROA(); }
 // Entry point for the overall ScalarReplAggregates function pass.
 // This function is provided to you.
 
-// check whether it is promotable
-bool Promotable(AllocaInst* Value_Def) {
-  if (!Value_Def) {
-    return false;
-  }
-
-  if (!(Value_Def->getType()->isFPOrFPVectorTy() || Value_Def->getType()->isIntOrIntVectorTy() || Value_Def->getType()->isPtrOrPtrVectorTy())) {
-    return false;
-  }
-
-  for (auto& Value_Use: Value_Def->uses()) {
-    auto User = Value_Use.getUser();
-    if (User && llvm::isa<llvm::Instruction>(User)) {
-      auto User_Inst = llvm::cast<llvm::Instruction>(User);
-      if (llvm::isa<llvm::LoadInst>(User_Inst)) {
-        auto Load_Inst = llvm::cast<llvm::LoadInst>(User_Inst);
-        if (Load_Inst->isVolatile()) {
-          return false;
-        } else {
-          if (Load_Inst->getPointerOperand() != Value_Def) {
-            return false;
-          }
-        }
-      } else if (llvm::isa<llvm::StoreInst>(User_Inst)) {
-        auto Store_Inst = llvm::cast<llvm::StoreInst>(User_Inst);
-        if (Store_Inst->isVolatile()) {
-          return false;
-        } else {
-          if (Store_Inst->getPointerOperand() != Value_Def) {
-            return false;
-          }
-        }
-      } else {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
 
 AllocaInst* Insert_Alloca_At_Head(Function& f, Type *ty) {
   BasicBlock &entry_bb = f.getEntryBlock();
@@ -138,12 +98,48 @@ AllocaInst* Insert_Alloca_At_Head(Function& f, Type *ty) {
   }
 }
 
-inline bool Is_Struct_Alloca(AllocaInst* Value_Def) {
-  auto Value_Def_Tp = Value_Def->getType();
-  return Value_Def_Tp->isStructTy();
+bool Promotable(AllocaInst* Value_Def) {
+  if (!Value_Def) {
+    return false;
+  }
+
+  if (!(Value_Def->getAllocatedType()->isFPOrFPVectorTy() || Value_Def->getAllocatedType()->isIntOrIntVectorTy() || Value_Def->getAllocatedType ()->isPtrOrPtrVectorTy())) {
+    return false;
+  }
+
+  for (auto& Value_Use: Value_Def->uses()) {
+    auto User = Value_Use.getUser();
+    if (User && llvm::isa<llvm::Instruction>(User)) {
+      auto User_Inst = llvm::cast<llvm::Instruction>(User);
+      if (llvm::isa<llvm::LoadInst>(User_Inst)) {
+        auto Load_Inst = llvm::cast<llvm::LoadInst>(User_Inst);
+        if (Load_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Load_Inst->getPointerOperand() != Value_Def) {  
+            return false;
+          }
+        }
+      } else if (llvm::isa<llvm::StoreInst>(User_Inst)) {
+        auto Store_Inst = llvm::cast<llvm::StoreInst>(User_Inst);
+        if (Store_Inst->isVolatile()) {
+          return false;
+        } else {
+          if (Store_Inst->getPointerOperand() != Value_Def) {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
-bool Is_Expandable(AllocaInst* Value_Def) {
+// by default the Value_Def do no need to be Struct Type
+bool Is_Expandable_Recur(llvm::Value* Value_Def) {
   if (!Value_Def) {
     return false;
   }
@@ -170,21 +166,43 @@ bool Is_Expandable(AllocaInst* Value_Def) {
             return false;
           }
         }
+      } else if (llvm::isa<GetElementPtrInst>(User)) {
+        auto Gep_Inst = llvm::cast<GetElementPtrInst>(User);
+        auto First_Idx = Gep_Inst->getOperand(1);
+        auto First_Idx_Con = dyn_cast<ConstantInt>(First_Idx);
+        if (!(First_Idx_Con && First_Idx_Con->isZero())) {
+          return false;
+        } else {
+          return Is_Expandable_Recur(Gep_Inst); // recursive
+        }
+      } else if (llvm::isa<CmpInst>(User)) {
+        auto Cmp_Inst = llvm::cast<CmpInst>(User);
+        auto lhs = Cmp_Inst->getOperand(0), rhs = Cmp_Inst->getOperand(1);
+        if (!((llvm::isa<llvm::ConstantPointerNull>(lhs) || llvm::isa<llvm::ConstantPointerNull>(rhs)) && 
+            (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_EQ || Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_NE))) {
+              return false;
+        }
       } else if (llvm::isa<BitCastInst>(User)) {
         continue;        
-      } else if (llvm::isa<GetElementPtrInst>(User)) {
-        
       } else {
         return false;
       }
     }
   }
 
-
   return true;
 }
 
+inline bool Is_Expandable_Entry(AllocaInst* Value_Def) {
+  return  Value_Def->getAllocatedType()->isStructTy() && Is_Expandable_Recur(Value_Def);
+}
+
+void transform(Function &F) {
+    
+}
+
 bool SROA::runOnFunction(Function &F) {
+  dbgs() << F.getName() << "                               \n";
   // initialization
   worklist_alloca.clear();
   marked_worklist_alloca.clear();
@@ -200,25 +218,28 @@ bool SROA::runOnFunction(Function &F) {
     }
   }
 
-  // // test the promotable function
-  // int counter_self = 0, counter_ref = 0;
-  // for (auto &BB : F) {
-  //   for (auto &Inst : BB) {
-  //     if (llvm::isa<llvm::AllocaInst>(Inst)) {
-  //       auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-  //       assert(!(Promotable(Alloca_Inst) && !(isAllocaPromotable(Alloca_Inst))));
-  //       if (Promotable(Alloca_Inst)) {
-  //         counter_self += 1;
-  //       }
-  //       if (isAllocaPromotable(Alloca_Inst)) {
-  //         counter_ref += 1;
-  //       }
-  //     }
-  //   }
-  // }
+  // test the promotable function
+  int counter_self = 0, counter_ref = 0, counter_expandable = 0;
+  for (auto &BB : F) {
+    for (auto &Inst : BB) {
+      if (llvm::isa<llvm::AllocaInst>(Inst)) {
+        auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
+        if (Is_Expandable_Entry(Alloca_Inst)) dbgs() << *Alloca_Inst << "\n";
+        
+        // if (Promotable(Alloca_Inst)) {
+        //   counter_self += 1;
+        // }
+        // if (isAllocaPromotable(Alloca_Inst)) {
+        //   counter_ref += 1;
+        // }
+      }
+    }
+  }
 
   // dbgs() << "Self Find is: " << counter_self << "\n";
   // dbgs() << "Ref Find is: " << counter_ref << "\n";
+  // dbgs() << F.getName() << " Expandable Find is: " << counter_expandable << "\n";
+  dbgs() << F.getName() << "                               \n";
 
   return true;
 }

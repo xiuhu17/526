@@ -31,7 +31,7 @@ test: $(TARGET).test.bc
 .PRECIOUS: %.ll
 
 
-%.ll: %.bc
+%.ll: %.llvm.bc
 	$(LLVMDIS) -f $<
 
 
