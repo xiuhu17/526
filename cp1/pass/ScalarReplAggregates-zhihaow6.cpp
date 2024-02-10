@@ -32,6 +32,8 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/IR/Dominators.h"
+#include "llvm/IR/IRBuilder.h"
+
 using namespace llvm;
 
 STATISTIC(NumReplaced,  "Number of aggregate allocas broken up");
@@ -44,10 +46,6 @@ namespace {
 
     // Entry point for the overall scalar-replacement pass
     bool runOnFunction(Function &F);
-
-    // insert the alloca function at the beginning of the funciton
-    AllocaInst* insert_alloca_at_head(Function&F, Type *ty);
-
 
     // getAnalysisUsage - List passes required by this pass.  We also know it
     // will not alter the CFG, so say so.
@@ -65,6 +63,16 @@ namespace {
     DenseSet<AllocaInst *> worklist_alloca;
     DenseSet<AllocaInst *> marked_worklist_alloca;
     DenseSet<AllocaInst *> executed_alloca;
+
+
+    // insert the alloca function at the beginning of the funciton
+    AllocaInst* Insert_Alloca_At_Head(Function& F, Type *ty);
+    bool Promotable(AllocaInst* Value_Def);
+    bool Is_Expandable_LoadStore(llvm::Value* Value_Def);
+    bool Is_Expandable_U1U2(llvm::Value* Value_Def); 
+    inline bool Is_Expandable_Entry(AllocaInst* Value_Def);
+    void Do_Scalar_Expand(Function& F, AllocaInst* Value_Def);
+    void Transform(Function &F); 
   };
 }
 
@@ -87,8 +95,8 @@ FunctionPass *createMyScalarReplAggregatesPass() { return new SROA(); }
 // This function is provided to you.
 
 
-AllocaInst* Insert_Alloca_At_Head(Function& f, Type *ty) {
-  BasicBlock &entry_bb = f.getEntryBlock();
+AllocaInst* SROA::Insert_Alloca_At_Head(Function& F, Type *ty) {
+  BasicBlock &entry_bb = F.getEntryBlock();
   if (entry_bb.empty()) {
     // Insert "at the end" of this bb
     return new AllocaInst(ty, 0, "", &entry_bb);
@@ -98,7 +106,7 @@ AllocaInst* Insert_Alloca_At_Head(Function& f, Type *ty) {
   }
 }
 
-bool Promotable(AllocaInst* Value_Def) {
+bool SROA::Promotable(AllocaInst* Value_Def) {
   if (!Value_Def) {
     return false;
   }
@@ -139,11 +147,7 @@ bool Promotable(AllocaInst* Value_Def) {
 }
 
 // by default the Value_Def do no need to be Struct Type
-bool Is_Expandable_Recur(llvm::Value* Value_Def) {
-  if (!Value_Def) {
-    return false;
-  }
-
+bool SROA::Is_Expandable_LoadStore(llvm::Value* Value_Def) {
   for (auto& Value_Use: Value_Def->uses()) {
     auto User = Value_Use.getUser();
     if (User && llvm::isa<llvm::Instruction>(User)) {
@@ -153,7 +157,7 @@ bool Is_Expandable_Recur(llvm::Value* Value_Def) {
         if (Load_Inst->isVolatile()) {
           return false;
         } else {
-          if (Load_Inst->getPointerOperand() != Value_Def) {
+          if (Load_Inst->getPointerOperand() != Value_Def) {  
             return false;
           }
         }
@@ -166,23 +170,41 @@ bool Is_Expandable_Recur(llvm::Value* Value_Def) {
             return false;
           }
         }
-      } else if (llvm::isa<GetElementPtrInst>(User)) {
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+bool SROA::Is_Expandable_U1U2(llvm::Value* Value_Def) {
+  if (!Value_Def) return false;
+
+  for (auto& Value_Use: Value_Def->uses()) {
+    auto User = Value_Use.getUser();
+    if (User && llvm::isa<llvm::Instruction>(User)) {
+      auto User_Inst = llvm::cast<llvm::Instruction>(User);
+      if (llvm::isa<GetElementPtrInst>(User_Inst)) {
         auto Gep_Inst = llvm::cast<GetElementPtrInst>(User);
         auto First_Idx = Gep_Inst->getOperand(1);
         auto First_Idx_Con = dyn_cast<ConstantInt>(First_Idx);
         if (!(First_Idx_Con && First_Idx_Con->isZero())) {
           return false;
         } else {
-          return Is_Expandable_Recur(Gep_Inst); // recursive
+          if (!(Is_Expandable_U1U2(Gep_Inst) || Is_Expandable_LoadStore(Gep_Inst))) {
+            return false;
+          }
         }
-      } else if (llvm::isa<CmpInst>(User)) {
-        auto Cmp_Inst = llvm::cast<CmpInst>(User);
+      } else if (llvm::isa<CmpInst>(User_Inst)) {
+        auto Cmp_Inst = llvm::cast<CmpInst>(User_Inst);
         auto lhs = Cmp_Inst->getOperand(0), rhs = Cmp_Inst->getOperand(1);
         if (!((llvm::isa<llvm::ConstantPointerNull>(lhs) || llvm::isa<llvm::ConstantPointerNull>(rhs)) && 
             (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_EQ || Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_NE))) {
               return false;
         }
-      } else if (llvm::isa<BitCastInst>(User)) {
+      } else if (llvm::isa<BitCastInst>(User_Inst)) {
         continue;        
       } else {
         return false;
@@ -193,12 +215,68 @@ bool Is_Expandable_Recur(llvm::Value* Value_Def) {
   return true;
 }
 
-inline bool Is_Expandable_Entry(AllocaInst* Value_Def) {
-  return  Value_Def->getAllocatedType()->isStructTy() && Is_Expandable_Recur(Value_Def);
+inline bool SROA::Is_Expandable_Entry(AllocaInst* Value_Def) {
+  if (!Value_Def) return false;
+
+  if (!Value_Def->getAllocatedType()->isStructTy()) return false;
+
+  return Is_Expandable_U1U2(Value_Def);
 }
 
-void transform(Function &F) {
+void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
+  if (!Is_Expandable_Entry(Value_Def)) return;
+
+  worklist_alloca.erase(Value_Def);
+
+  SmallVector<AllocaInst*, 5> idx_to_alloca;
+  auto struct_tp = Value_Def->getAllocatedType();
+  for (int i = 0; i < struct_tp->getNumContainedTypes(); ++ i) {
+    auto sub_tp = struct_tp->getStructElementType(i);
+    auto new_alloca = Insert_Alloca_At_Head(F, sub_tp);
+    idx_to_alloca.push_back(new_alloca);
+    if (Is_Expandable_Entry(new_alloca)) {
+      worklist_alloca.insert(new_alloca);
+    }
+  }
+
+  for (auto& Value_Use: Value_Def->uses()) {
+    auto User = Value_Use.getUser();
+    if (User && llvm::isa<GetElementPtrInst>(User)) {
+      auto Gep_Inst = llvm::cast<GetElementPtrInst>(User);
+      llvm::Value *Gep_Substitution;
+      auto Idx = llvm::dyn_cast<ConstantInt>(Gep_Inst->getOperand(2))->getZExtValue();
+      if (Gep_Inst->getNumOperands() == 3) { 
+        Gep_Substitution = idx_to_alloca[Idx];
+      } else {
+        IRBuilder<> Builder(Gep_Inst->getContext());
+        Builder.SetInsertPoint(Gep_Inst->getParent(), std::next(Gep_Inst->getIterator()));
+        auto Gep_ptr = idx_to_alloca[Idx];
+        auto Gep_idx0 = Gep_Inst->getOperand(1);
+        SmallVector<llvm::Value*, 5> Gep_arr = {Gep_idx0};
+        for (int i = 3; i < Gep_Inst->getNumOperands(); ++ i) {
+          Gep_arr.push_back(Gep_Inst->getOperand(i));
+        }
+        Gep_Substitution = Builder.CreateGEP(Gep_ptr->getAllocatedType(), Gep_ptr, Gep_arr);
+      }
+      Gep_Inst->replaceAllUsesWith(Gep_Substitution);
+      Gep_Inst->eraseFromParent();
+    } else if (User && llvm::isa<CmpInst>(User)) {
+      auto Cmp_Inst = llvm::cast<CmpInst>(User);
+      llvm::Value* Cmp_Substition;
+
+
+      Cmp_Inst->replaceAllUsesWith(Cmp_Substition);
+      Cmp_Inst->eraseFromParent();
+    }
+  }
+
+  Value_Def->eraseFromParent();
+}
+
+void SROA::Transform(Function &F) {
+  while (!worklist_alloca.empty()) {
     
+  }
 }
 
 bool SROA::runOnFunction(Function &F) {
@@ -208,6 +286,8 @@ bool SROA::runOnFunction(Function &F) {
   marked_worklist_alloca.clear();
   executed_alloca.clear();
   DominatorTree& DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+  LLVMContext& Context = F.getContext();
+  IRBuilder<> Builder(Context);
 
   for (auto &BB : F) {
     for (auto &Inst : BB) {
@@ -225,20 +305,13 @@ bool SROA::runOnFunction(Function &F) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
         auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
         if (Is_Expandable_Entry(Alloca_Inst)) dbgs() << *Alloca_Inst << "\n";
-        
-        // if (Promotable(Alloca_Inst)) {
-        //   counter_self += 1;
-        // }
-        // if (isAllocaPromotable(Alloca_Inst)) {
-        //   counter_ref += 1;
-        // }
+        // if (Promotable(Alloca_Inst))  counter_self += 1;
+        // if (isAllocaPromotable(Alloca_Inst)) counter_ref += 1;
       }
     }
   }
 
-  // dbgs() << "Self Find is: " << counter_self << "\n";
-  // dbgs() << "Ref Find is: " << counter_ref << "\n";
-  // dbgs() << F.getName() << " Expandable Find is: " << counter_expandable << "\n";
+
   dbgs() << F.getName() << "                               \n";
 
   return true;

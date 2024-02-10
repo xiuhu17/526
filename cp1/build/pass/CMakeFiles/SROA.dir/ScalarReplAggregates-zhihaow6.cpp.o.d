@@ -301,4 +301,10 @@ pass/CMakeFiles/SROA.dir/ScalarReplAggregates-zhihaow6.cpp.o: \
  /usr/local/include/llvm/IR/PassManagerInternal.h /usr/include/c++/8/list \
  /usr/include/c++/8/bits/stl_list.h /usr/include/c++/8/bits/list.tcc \
  /usr/local/include/llvm/Support/GenericDomTree.h \
- /usr/local/include/llvm/Support/CFGUpdate.h
+ /usr/local/include/llvm/Support/CFGUpdate.h \
+ /usr/local/include/llvm/IR/IRBuilder.h \
+ /usr/local/include/llvm/IR/ConstantFolder.h \
+ /usr/local/include/llvm/IR/Intrinsics.h \
+ /usr/local/include/llvm/IR/IntrinsicEnums.inc \
+ /usr/local/include/llvm/IR/Operator.h \
+ /usr/local/include/llvm/IR/ValueHandle.h
