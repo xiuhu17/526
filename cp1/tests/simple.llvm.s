@@ -57,88 +57,94 @@ main:                                   # @main
 	movsd	.LCPI0_11(%rip), %xmm5  # xmm5 = mem[0],zero
 	movsd	.LCPI0_12(%rip), %xmm6  # xmm6 = mem[0],zero
 	movsd	.LCPI0_13(%rip), %xmm7  # xmm7 = mem[0],zero
-	movl	$0, -4(%rbp)
-	movl	$111111, -128(%rbp)     # imm = 0x1B207
-	movsd	%xmm7, -120(%rbp)
-	movl	$1113, -112(%rbp)       # imm = 0x459
-	movl	$222221, -104(%rbp)     # imm = 0x3640D
-	movsd	%xmm6, -96(%rbp)
-	movl	$22223, -88(%rbp)       # imm = 0x56CF
-	movl	$33331, -80(%rbp)       # imm = 0x8233
-	movsd	%xmm5, -72(%rbp)
-	movl	$33333, -64(%rbp)       # imm = 0x8235
-	leaq	-80(%rbp), %rax
-	movq	%rax, -512(%rbp)
-	movl	$1, -288(%rbp)
-	movl	$444441, -280(%rbp)     # imm = 0x6C819
-	movl	$4441, -272(%rbp)       # imm = 0x1159
-	movsd	%xmm0, -264(%rbp)
-	movl	$44443, -256(%rbp)      # imm = 0xAD9B
-	movl	$555551, -248(%rbp)     # imm = 0x87A1F
-	movsd	%xmm3, -240(%rbp)
-	movl	$55553, -232(%rbp)      # imm = 0xD901
+	movl	$0, -12(%rbp)
+	movl	$111111, -136(%rbp)     # imm = 0x1B207
+	movsd	%xmm7, -128(%rbp)
+	movl	$1113, -120(%rbp)       # imm = 0x459
+	movl	$222221, -112(%rbp)     # imm = 0x3640D
+	movsd	%xmm6, -104(%rbp)
+	movl	$22223, -96(%rbp)       # imm = 0x56CF
+	movl	$33331, -88(%rbp)       # imm = 0x8233
+	movsd	%xmm5, -80(%rbp)
+	movl	$33333, -72(%rbp)       # imm = 0x8235
+	leaq	-88(%rbp), %rax
+	movq	%rax, -520(%rbp)
+	movl	$1, -304(%rbp)
+	movl	$444441, -296(%rbp)     # imm = 0x6C819
+	movl	$4441, -288(%rbp)       # imm = 0x1159
+	movsd	%xmm0, -280(%rbp)
+	movl	$44443, -272(%rbp)      # imm = 0xAD9B
+	movl	$555551, -264(%rbp)     # imm = 0x87A1F
+	movsd	%xmm3, -256(%rbp)
+	movl	$55553, -248(%rbp)      # imm = 0xD901
+	movsd	%xmm2, -240(%rbp)
+	movl	$66661, -232(%rbp)      # imm = 0x10465
+	movl	$6661, -232(%rbp)       # imm = 0x1A05
+	movl	$6661, -232(%rbp)       # imm = 0x1A05
 	movsd	%xmm2, -224(%rbp)
-	movl	$66661, -216(%rbp)      # imm = 0x10465
-	movl	$6661, -216(%rbp)       # imm = 0x1A05
-	movl	$6661, -216(%rbp)       # imm = 0x1A05
-	movsd	%xmm2, -208(%rbp)
-	movl	$77774, -200(%rbp)      # imm = 0x12FCE
-	movl	$77779, -192(%rbp)      # imm = 0x12FD3
-	leaq	-128(%rbp), %rax
-	movq	%rax, -184(%rbp)
-	movl	$888881, -176(%rbp)     # imm = 0xD9031
-	movsd	%xmm13, -168(%rbp)
-	movl	$88883, -160(%rbp)      # imm = 0x15B33
-	movsd	%xmm12, -152(%rbp)
-	leaq	-104(%rbp), %rax
-	movq	%rax, -144(%rbp)
-	movl	$999991, -56(%rbp)      # imm = 0xF4237
-	movsd	%xmm11, -48(%rbp)
-	movl	$99993, -40(%rbp)       # imm = 0x18699
-	movl	$9991, -496(%rbp)       # imm = 0x2707
-	movl	$99991, -488(%rbp)      # imm = 0x18697
-	movsd	%xmm4, -480(%rbp)
-	movl	$99993, -472(%rbp)      # imm = 0x18699
-	movl	$9991, -464(%rbp)       # imm = 0x2707
-	movsd	%xmm4, -456(%rbp)
-	movl	$9993, -448(%rbp)       # imm = 0x2709
-	movsd	%xmm9, -440(%rbp)
-	movl	$9991, -432(%rbp)       # imm = 0x2707
-	movl	$99991, -432(%rbp)      # imm = 0x18697
-	movl	$9991, -432(%rbp)       # imm = 0x2707
-	movsd	%xmm8, -424(%rbp)
-	movl	$9994, -416(%rbp)       # imm = 0x270A
-	movl	$9999, -408(%rbp)       # imm = 0x270F
-	leaq	-56(%rbp), %rax
-	movq	%rax, -400(%rbp)
-	leaq	-496(%rbp), %rax
-	movq	%rax, -136(%rbp)
-	movl	$1000000, -32(%rbp)     # imm = 0xF4240
-	movsd	%xmm1, -24(%rbp)
-	movl	$300000000, -16(%rbp)   # imm = 0x11E1A300
-	movl	$1000, -392(%rbp)       # imm = 0x3E8
-	movl	$100000, -384(%rbp)     # imm = 0x186A0
-	movsd	%xmm1, -376(%rbp)
-	movl	$300000, -368(%rbp)     # imm = 0x493E0
-	movl	$100, -360(%rbp)
-	movsd	%xmm1, -352(%rbp)
-	movl	$3000000, -344(%rbp)    # imm = 0x2DC6C0
+	movl	$77774, -216(%rbp)      # imm = 0x12FCE
+	movl	$77779, -208(%rbp)      # imm = 0x12FD3
+	leaq	-136(%rbp), %rax
+	movq	%rax, -200(%rbp)
+	movl	$888881, -192(%rbp)     # imm = 0xD9031
+	movsd	%xmm13, -184(%rbp)
+	movl	$88883, -176(%rbp)      # imm = 0x15B33
+	movsd	%xmm12, -168(%rbp)
+	leaq	-112(%rbp), %rax
+	movq	%rax, -160(%rbp)
+	movl	$999991, -64(%rbp)      # imm = 0xF4237
+	movsd	%xmm11, -56(%rbp)
+	movl	$99993, -48(%rbp)       # imm = 0x18699
+	movl	$9991, -512(%rbp)       # imm = 0x2707
+	movl	$99991, -504(%rbp)      # imm = 0x18697
+	movsd	%xmm4, -496(%rbp)
+	movl	$99993, -488(%rbp)      # imm = 0x18699
+	movl	$9991, -480(%rbp)       # imm = 0x2707
+	movsd	%xmm4, -472(%rbp)
+	movl	$9993, -464(%rbp)       # imm = 0x2709
+	movsd	%xmm9, -456(%rbp)
+	movl	$9991, -448(%rbp)       # imm = 0x2707
+	movl	$99991, -448(%rbp)      # imm = 0x18697
+	movl	$9991, -448(%rbp)       # imm = 0x2707
+	movsd	%xmm8, -440(%rbp)
+	movl	$9994, -432(%rbp)       # imm = 0x270A
+	movl	$9999, -424(%rbp)       # imm = 0x270F
+	leaq	-64(%rbp), %rax
+	movq	%rax, -416(%rbp)
+	leaq	-512(%rbp), %rax
+	movq	%rax, -152(%rbp)
+	movl	$1000000, -40(%rbp)     # imm = 0xF4240
+	movsd	%xmm1, -32(%rbp)
+	movl	$300000000, -24(%rbp)   # imm = 0x11E1A300
+	movl	$1000, -408(%rbp)       # imm = 0x3E8
+	movl	$100000, -400(%rbp)     # imm = 0x186A0
+	movsd	%xmm1, -392(%rbp)
+	movl	$300000, -384(%rbp)     # imm = 0x493E0
+	movl	$100, -376(%rbp)
+	movsd	%xmm1, -368(%rbp)
+	movl	$3000000, -360(%rbp)    # imm = 0x2DC6C0
+	movsd	%xmm10, -352(%rbp)
+	movl	$10000000, -344(%rbp)   # imm = 0x989680
+	movl	$10000000, -344(%rbp)   # imm = 0x989680
+	movl	$100000000, -344(%rbp)  # imm = 0x5F5E100
 	movsd	%xmm10, -336(%rbp)
-	movl	$10000000, -328(%rbp)   # imm = 0x989680
-	movl	$10000000, -328(%rbp)   # imm = 0x989680
-	movl	$100000000, -328(%rbp)  # imm = 0x5F5E100
-	movsd	%xmm10, -320(%rbp)
-	movl	$400, -312(%rbp)        # imm = 0x190
-	movl	$90000, -304(%rbp)      # imm = 0x15F90
-	leaq	-32(%rbp), %rax
-	movq	%rax, -296(%rbp)
-	leaq	-392(%rbp), %rax
-	movq	%rax, -504(%rbp)
-	movl	-248(%rbp), %esi
-	movl	-200(%rbp), %edx
-	movl	-160(%rbp), %ecx
-	movq	-144(%rbp), %rax
+	movl	$400, -328(%rbp)        # imm = 0x190
+	movl	$90000, -320(%rbp)      # imm = 0x15F90
+	leaq	-40(%rbp), %rax
+	movq	%rax, -312(%rbp)
+	leaq	-408(%rbp), %rax
+	movq	%rax, -8(%rbp)
+	leaq	-8(%rbp), %rax
+	movq	%rax, -144(%rbp)
+	movl	-264(%rbp), %esi
+	movl	-216(%rbp), %edx
+	movl	-176(%rbp), %ecx
+	movq	-160(%rbp), %rax
 	movsd	8(%rax), %xmm0          # xmm0 = mem[0],zero
+	movq	-144(%rbp), %rax
+	movq	(%rax), %rax
+	movq	96(%rax), %rax
+	movl	16(%rax), %r8d
 	movabsq	$.L.str, %rdi
 	movb	$1, %al
 	callq	printf
@@ -154,8 +160,8 @@ main:                                   # @main
 	.type	.L.str,@object          # @.str
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L.str:
-	.asciz	"The value is: %d %d %d %f"
-	.size	.L.str, 26
+	.asciz	"The value is: %d %d %d %f %d"
+	.size	.L.str, 29
 
 
 	.ident	"clang version 8.0.0 (tags/RELEASE_800/final)"

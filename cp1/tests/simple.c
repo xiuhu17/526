@@ -5,7 +5,7 @@
 typedef struct inner { int M; double X; int N;} inner;
 typedef struct outer { int a; inner b; inner c; double d; inner f; int g; inner* h;} outer;
 
-typedef struct outerouter {int M; outer A; inner B; double N; inner* C;  outer* E; } outerouter;
+typedef struct outerouter {int M; outer A; inner B; double N; inner* C;  outer* E; outer** F;} outerouter;
 
 int main() {
     outerouter Test;
@@ -104,8 +104,9 @@ int main() {
     F.h = &G;
 
     FF = &F;
+    Test.F = &FF;
 
-    printf("The value is: %d %d %d %f", Test.A.c.M, Test.A.f.N, Test.B.N, Test.C->X);
+    printf("The value is: %d %d %d %f %d", Test.A.c.M, Test.A.f.N, Test.B.N, Test.C->X, (*(Test.F))->h->N);
 
     return 0;
 }

@@ -3,11 +3,11 @@ source_filename = "simple.c"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 
-@.str = private unnamed_addr constant [26 x i8] c"The value is: %d %d %d %f\00", align 1
+@.str = private unnamed_addr constant [29 x i8] c"The value is: %d %d %d %f %d\00", align 1
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i32 @main() #0 {
-  %1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str, i32 0, i32 0), i32 555551, i32 77774, i32 88883, double 2.222200e+04)
+  %1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str, i32 0, i32 0), i32 555551, i32 77774, i32 88883, double 2.222200e+04, i32 300000000)
   ret i32 0
 }
 

@@ -21,6 +21,7 @@ main:                                   # @main
 	movl	$555551, %esi           # imm = 0x87A1F
 	movl	$77774, %edx            # imm = 0x12FCE
 	movl	$88883, %ecx            # imm = 0x15B33
+	movl	$300000000, %r8d        # imm = 0x11E1A300
 	movb	$1, %al
 	callq	printf
 	xorl	%eax, %eax
@@ -34,8 +35,8 @@ main:                                   # @main
 	.type	.L.str,@object          # @.str
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L.str:
-	.asciz	"The value is: %d %d %d %f"
-	.size	.L.str, 26
+	.asciz	"The value is: %d %d %d %f %d"
+	.size	.L.str, 29
 
 
 	.ident	"clang version 8.0.0 (tags/RELEASE_800/final)"

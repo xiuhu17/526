@@ -3,11 +3,11 @@ source_filename = "simple.c"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 
-%struct.outerouter = type { i32, %struct.outer, %struct.inner, double, %struct.inner*, %struct.outer* }
+%struct.outerouter = type { i32, %struct.outer, %struct.inner, double, %struct.inner*, %struct.outer*, %struct.outer** }
 %struct.outer = type { i32, %struct.inner, %struct.inner, double, %struct.inner, i32, %struct.inner* }
 %struct.inner = type { i32, double, i32 }
 
-@.str = private unnamed_addr constant [26 x i8] c"The value is: %d %d %d %f\00", align 1
+@.str = private unnamed_addr constant [29 x i8] c"The value is: %d %d %d %f %d\00", align 1
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i32 @main() #0 {
@@ -211,22 +211,31 @@ define dso_local i32 @main() #0 {
   %130 = getelementptr inbounds %struct.outer, %struct.outer* %10, i32 0, i32 6
   store %struct.inner* %12, %struct.inner** %130, align 8
   store %struct.outer* %10, %struct.outer** %11, align 8
-  %131 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 1
-  %132 = getelementptr inbounds %struct.outer, %struct.outer* %131, i32 0, i32 2
-  %133 = getelementptr inbounds %struct.inner, %struct.inner* %132, i32 0, i32 0
-  %134 = load i32, i32* %133, align 8
-  %135 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 1
-  %136 = getelementptr inbounds %struct.outer, %struct.outer* %135, i32 0, i32 4
-  %137 = getelementptr inbounds %struct.inner, %struct.inner* %136, i32 0, i32 2
-  %138 = load i32, i32* %137, align 8
-  %139 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 2
-  %140 = getelementptr inbounds %struct.inner, %struct.inner* %139, i32 0, i32 2
-  %141 = load i32, i32* %140, align 8
-  %142 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 4
-  %143 = load %struct.inner*, %struct.inner** %142, align 8
-  %144 = getelementptr inbounds %struct.inner, %struct.inner* %143, i32 0, i32 1
-  %145 = load double, double* %144, align 8
-  %146 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str, i32 0, i32 0), i32 %134, i32 %138, i32 %141, double %145)
+  %131 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 6
+  store %struct.outer** %11, %struct.outer*** %131, align 8
+  %132 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 1
+  %133 = getelementptr inbounds %struct.outer, %struct.outer* %132, i32 0, i32 2
+  %134 = getelementptr inbounds %struct.inner, %struct.inner* %133, i32 0, i32 0
+  %135 = load i32, i32* %134, align 8
+  %136 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 1
+  %137 = getelementptr inbounds %struct.outer, %struct.outer* %136, i32 0, i32 4
+  %138 = getelementptr inbounds %struct.inner, %struct.inner* %137, i32 0, i32 2
+  %139 = load i32, i32* %138, align 8
+  %140 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 2
+  %141 = getelementptr inbounds %struct.inner, %struct.inner* %140, i32 0, i32 2
+  %142 = load i32, i32* %141, align 8
+  %143 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 4
+  %144 = load %struct.inner*, %struct.inner** %143, align 8
+  %145 = getelementptr inbounds %struct.inner, %struct.inner* %144, i32 0, i32 1
+  %146 = load double, double* %145, align 8
+  %147 = getelementptr inbounds %struct.outerouter, %struct.outerouter* %2, i32 0, i32 6
+  %148 = load %struct.outer**, %struct.outer*** %147, align 8
+  %149 = load %struct.outer*, %struct.outer** %148, align 8
+  %150 = getelementptr inbounds %struct.outer, %struct.outer* %149, i32 0, i32 6
+  %151 = load %struct.inner*, %struct.inner** %150, align 8
+  %152 = getelementptr inbounds %struct.inner, %struct.inner* %151, i32 0, i32 2
+  %153 = load i32, i32* %152, align 8
+  %154 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str, i32 0, i32 0), i32 %135, i32 %139, i32 %142, double %146, i32 %153)
   ret i32 0
 }
 
