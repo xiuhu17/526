@@ -284,7 +284,7 @@ void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
 
   // add to worklist
   for (auto& iter: idx_to_alloca) {
-    if (Is_Expandable_Entry(iter) && marked_worklist_alloca.find(iter) == marked_worklist_alloca.end()) {
+    if (Is_Expandable_Entry(iter)) {
       worklist_alloca.insert(iter);
       marked_worklist_alloca.insert(iter);
     }
@@ -318,7 +318,7 @@ void SROA::Reinitialize_WL(Function& F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
         auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-        if (Is_Expandable_Entry(Alloca_Inst) && marked_worklist_alloca.find(Alloca_Inst) == marked_worklist_alloca.end()) {
+        if (Is_Expandable_Entry(Alloca_Inst) ) {
           worklist_alloca.insert(Alloca_Inst);
           marked_worklist_alloca.insert(Alloca_Inst);
         }
@@ -328,11 +328,14 @@ void SROA::Reinitialize_WL(Function& F) {
 }
 
 void SROA::Update_Wrapper(Function& F, DominatorTree& DT) {
+  int counter = 0;
   while (!worklist_alloca.empty()) {
     Transform_Scalar(F);
     Transform_Mem2Reg(F, DT);
     Reinitialize_WL(F);
+    counter ++;
   }
+  dbgs() << "This runs: " << counter << "\n";
 }
 
 bool SROA::runOnFunction(Function &F) {
@@ -354,11 +357,12 @@ bool SROA::runOnFunction(Function &F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
         auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-        dbgs() << *Alloca_Inst << "\n";
+        dbgs() << *Alloca_Inst << ", and is is expandable: "  << Is_Expandable_Entry(Alloca_Inst) <<"\n";
       }
     }
   }
-
+  
+  dbgs() << worklist_alloca.size() << " " << marked_worklist_alloca.size() << " " << executed_alloca.size() << "\n";
   dbgs() << F.getName() << "                               \n";
 
   return true;

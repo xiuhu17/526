@@ -3,7 +3,7 @@
 	.section	.rodata.cst8,"aM",@progbits,8
 	.p2align	3               # -- Begin function main
 .LCPI0_0:
-	.quad	4626041242239631360     # double 19
+	.quad	4671837550803943424     # double 22222
 	.text
 	.globl	main
 	.p2align	4, 0x90
@@ -18,9 +18,9 @@ main:                                   # @main
 	.cfi_def_cfa_register %rbp
 	movsd	.LCPI0_0(%rip), %xmm0   # xmm0 = mem[0],zero
 	movabsq	$.L.str, %rdi
-	movl	$10, %esi
-	movl	$1, %edx
-	movl	$17, %ecx
+	movl	$555551, %esi           # imm = 0x87A1F
+	movl	$77774, %edx            # imm = 0x12FCE
+	movl	$88883, %ecx            # imm = 0x15B33
 	movb	$1, %al
 	callq	printf
 	xorl	%eax, %eax

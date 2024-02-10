@@ -1,7 +1,7 @@
 LEVEL = ..
 
 ## change or use make TARGET=inputfilename
-TARGET=trivial
+TARGET=simple
 
 ## replace LLVMROOT and SROALIB as appropriate
 NETID = `whoami`
@@ -16,7 +16,8 @@ LLVMOPT = /home/zhihaow6/llvm-project8/bin/opt
 
 ## Other choices: test or comparecfe (these will be provided later)
 default: debug
-DEBUGOPTS =  -verify -inline -mem2reg -simplifycfg -mem2reg -globalopt -globaldce -instcombine -adce -instcombine -simplifycfg
+DEBUGOPTS =  -verify 
+# -inline -mem2reg -simplifycfg -mem2reg -globalopt -globaldce -instcombine -adce -instcombine -simplifycfg
 
 testsimple: debug
 debug: $(TARGET).debug.bc
@@ -31,9 +32,11 @@ test: $(TARGET).test.bc
 .PRECIOUS: %.ll
 
 
-%.ll: %.llvm.bc
+%.llvm.ll: %.llvm.bc
 	$(LLVMDIS) -f $<
 
+%.debug.ll: %.debug.bc
+	$(LLVMDIS) -f $<
 
 %.llvm.bc: %.c
 	$(LLVMGCC) -S -emit-llvm -o - $< | $(LLVMAS) -o=$@
