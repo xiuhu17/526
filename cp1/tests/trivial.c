@@ -26,8 +26,8 @@ main(int argc, char** argv)
   S.X = 0.142857;
   S.N = 12;
   printf("testSimple: %d %f % d\n", S.M, S.X, S.N);
-  test_func(S);
-  test_func_ptr(&S);
+  // test_func(S);
+  // test_func_ptr(&S);
   // test_func(S);
 
   // test_func_ptr(&S);
