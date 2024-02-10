@@ -72,7 +72,10 @@ namespace {
     bool Is_Expandable_U1U2(llvm::Value* Value_Def); 
     inline bool Is_Expandable_Entry(AllocaInst* Value_Def);
     void Do_Scalar_Expand(Function& F, AllocaInst* Value_Def);
-    void Transform(Function &F); 
+    void Transform_Scalar(Function &F); 
+    void Transform_Mem2Reg(Function& F, DominatorTree& DT);
+    void Update_Wrapper(Function& F, DominatorTree& DT);
+    void Reinitialize_WL(Function& F);
   };
 }
 
@@ -288,36 +291,65 @@ void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
   }
 }
 
-void SROA::Transform(Function &F) {
+void SROA::Transform_Scalar(Function &F) {
   while (!worklist_alloca.empty()) {
     auto alloca_for_expand = *worklist_alloca.begin();
     Do_Scalar_Expand(F, alloca_for_expand);
   }
 }
 
-bool SROA::runOnFunction(Function &F) {
-  dbgs() << F.getName() << "                               \n";
-  // initialization
-  worklist_alloca.clear();
-  marked_worklist_alloca.clear();
-  executed_alloca.clear();
-  DominatorTree& DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-  LLVMContext& Context = F.getContext();
-
+void SROA::Transform_Mem2Reg(Function& F, DominatorTree& DT) {
+  std::vector<AllocaInst*> Allocas_Promotalbe;
   for (auto &BB : F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
         auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-        if (Is_Expandable_Entry(Alloca_Inst)) {
+        if (Promotable(Alloca_Inst)) {
+          Allocas_Promotalbe.push_back(Alloca_Inst);
+        }
+      }
+    }
+  }
+  PromoteMemToReg(Allocas_Promotalbe, DT);
+}
+
+void SROA::Reinitialize_WL(Function& F) {
+  for (auto &BB : F) {
+    for (auto &Inst : BB) {
+      if (llvm::isa<llvm::AllocaInst>(Inst)) {
+        auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
+        if (Is_Expandable_Entry(Alloca_Inst) && marked_worklist_alloca.find(Alloca_Inst) == marked_worklist_alloca.end()) {
           worklist_alloca.insert(Alloca_Inst);
           marked_worklist_alloca.insert(Alloca_Inst);
         }
       }
     }
   }
+}
 
-  Transform(F);
+void SROA::Update_Wrapper(Function& F, DominatorTree& DT) {
+  while (!worklist_alloca.empty()) {
+    Transform_Scalar(F);
+    Transform_Mem2Reg(F, DT);
+    Reinitialize_WL(F);
+  }
+}
 
+bool SROA::runOnFunction(Function &F) {
+  dbgs() << F.getName() << "                               \n";
+
+  // initialization
+  worklist_alloca.clear();
+  marked_worklist_alloca.clear();
+  executed_alloca.clear();
+  DominatorTree& DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+  LLVMContext& Context = F.getContext();
+  Reinitialize_WL(F);
+
+  // do the expansion and promotaion
+  Update_Wrapper(F, DT);
+
+  // debug
   for (auto &BB : F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
