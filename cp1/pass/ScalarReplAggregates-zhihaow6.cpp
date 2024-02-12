@@ -264,9 +264,27 @@ void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
       IRBuilder<> Builder(Cmp_Inst->getContext());
       Builder.SetInsertPoint(Cmp_Inst->getParent(), std::next(Cmp_Inst->getIterator()));
       if (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_EQ) {
-        Cmp_Substition = Builder.CreateICmpEQ(idx_to_alloca.back(), llvm::Constant::getNullValue(idx_to_alloca.back()->getType()));
+        // SmallVector<llvm::Value*, 5> Cmp_arr;
+        // for (int i = 0; i < idx_to_alloca.size(); ++ i) {
+        //   Cmp_arr.push_back(Builder.CreateICmpEQ(idx_to_alloca[i], llvm::Constant::getNullValue(idx_to_alloca[i]->getType())));
+        // }
+        // llvm::Value* false_ = llvm::ConstantInt::getFalse(Cmp_Inst->getContext());
+        // for (int i = 0; i < Cmp_arr.size(); ++ i) {
+        //   false_ = Builder.CreateOr(false_, Cmp_arr[i]);
+        // }
+        // Cmp_Substition = false_;
+        Cmp_Substition = llvm::ConstantInt::getFalse(Cmp_Inst->getContext());
       } else if (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_NE) {
-        Cmp_Substition = Builder.CreateICmpNE(idx_to_alloca.back(), llvm::Constant::getNullValue(idx_to_alloca.back()->getType()));
+        // SmallVector<llvm::Value*, 5> Cmp_arr;
+        // for (int i = 0; i < idx_to_alloca.size(); ++ i) {
+        //   Cmp_arr.push_back(Builder.CreateICmpNE(idx_to_alloca[i], llvm::Constant::getNullValue(idx_to_alloca[i]->getType())));
+        // }
+        // llvm::Value* true_ = llvm::ConstantInt::getTrue(Cmp_Inst->getContext());
+        // for (int i = 0; i < Cmp_arr.size(); ++ i) {
+        //   true_ = Builder.CreateAnd(true_, Cmp_arr[i]);
+        // }
+        // Cmp_Substition = true_;
+        Cmp_Substition = llvm::ConstantInt::getTrue(Cmp_Inst->getContext());
       }
       Cmp_Inst->replaceAllUsesWith(Cmp_Substition);
     }
