@@ -228,9 +228,9 @@ void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
   if (!Is_Expandable_Entry(Value_Def)) return;
 
   worklist_alloca.erase(Value_Def);
+  NumReplaced += 1;
 
   SmallVector<AllocaInst*, 5> idx_to_alloca;
-  SmallVector<Instruction*, 5> instToRemove; 
   auto struct_tp = Value_Def->getAllocatedType();
   for (int i = 0; i < struct_tp->getNumContainedTypes(); ++ i) {
     auto sub_tp = struct_tp->getStructElementType(i);
@@ -258,33 +258,23 @@ void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
         Gep_Substitution = Builder.CreateGEP(Gep_ptr->getAllocatedType(), Gep_ptr, Gep_arr);
       }
       Gep_Inst->replaceAllUsesWith(Gep_Substitution);
-      instToRemove.push_back(Gep_Inst);
     } else if (User && llvm::isa<CmpInst>(User)) {
       auto Cmp_Inst = llvm::cast<CmpInst>(User);
       llvm::Value* Cmp_Substition;
       IRBuilder<> Builder(Cmp_Inst->getContext());
       Builder.SetInsertPoint(Cmp_Inst->getParent(), std::next(Cmp_Inst->getIterator()));
       if (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_EQ) {
-        Cmp_Substition = Builder.CreateICmpEQ(idx_to_alloca.back(), llvm::Constant::getNullValue(llvm::Type::getInt32Ty(Cmp_Inst->getContext())));
+        Cmp_Substition = Builder.CreateICmpEQ(idx_to_alloca.back(), llvm::Constant::getNullValue(idx_to_alloca.back()->getType()));
       } else if (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_NE) {
-        Cmp_Substition = Builder.CreateICmpNE(idx_to_alloca.back(), llvm::Constant::getNullValue(llvm::Type::getInt32Ty(Cmp_Inst->getContext())));
+        Cmp_Substition = Builder.CreateICmpNE(idx_to_alloca.back(), llvm::Constant::getNullValue(idx_to_alloca.back()->getType()));
       }
       Cmp_Inst->replaceAllUsesWith(Cmp_Substition);
-      instToRemove.push_back(Cmp_Inst);
     }
   }
 
-  // erase
-  for (auto *inst : instToRemove) {
-    // dbgs() << *inst << "\n";
-    inst->eraseFromParent();
-  }
-  // dbgs() << *Value_Def << "\n";
-  Value_Def->eraseFromParent();
-
   // add to worklist
   for (auto& iter: idx_to_alloca) {
-    if (Is_Expandable_Entry(iter)) {
+    if (Is_Expandable_Entry(iter) && marked_worklist_alloca.find(iter) == marked_worklist_alloca.end()){
       worklist_alloca.insert(iter);
       marked_worklist_alloca.insert(iter);
     }
@@ -306,6 +296,7 @@ void SROA::Transform_Mem2Reg(Function& F, DominatorTree& DT) {
         auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
         if (Promotable(Alloca_Inst)) {
           Allocas_Promotalbe.push_back(Alloca_Inst);
+          NumPromoted += 1;
         }
       }
     }
@@ -318,7 +309,7 @@ void SROA::Reinitialize_WL(Function& F) {
     for (auto &Inst : BB) {
       if (llvm::isa<llvm::AllocaInst>(Inst)) {
         auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-        if (Is_Expandable_Entry(Alloca_Inst) ) {
+        if (Is_Expandable_Entry(Alloca_Inst) && marked_worklist_alloca.find(Alloca_Inst) == marked_worklist_alloca.end()){
           worklist_alloca.insert(Alloca_Inst);
           marked_worklist_alloca.insert(Alloca_Inst);
         }
@@ -355,14 +346,11 @@ bool SROA::runOnFunction(Function &F) {
   // debug
   for (auto &BB : F) {
     for (auto &Inst : BB) {
-      if (llvm::isa<llvm::AllocaInst>(Inst)) {
-        auto Alloca_Inst = llvm::cast<llvm::AllocaInst>(&Inst);
-        dbgs() << *Alloca_Inst << ", and is is expandable: "  << Is_Expandable_Entry(Alloca_Inst) <<"\n";
-      }
+        dbgs() << Inst <<"\n";
     }
   }
   
-  dbgs() << worklist_alloca.size() << " " << marked_worklist_alloca.size() << " " << executed_alloca.size() << "\n";
+  dbgs() << NumReplaced << " " << NumPromoted << "\n";
   dbgs() << F.getName() << "                               \n";
 
   return true;

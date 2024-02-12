@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct SimpleStruct { int M; double X; };
+struct Struct1 { int A; double B; };
+struct Struct2 { int M; struct Struct1 X; };
 
 /* Although this is a trivial case of scalar replacement, it is
  * instructive to study the unoptimized code.  Run "make trivial.llvm.bc",
@@ -11,9 +12,16 @@ struct SimpleStruct { int M; double X; };
 int
 main(int argc, char** argv)
 {
-  struct SimpleStruct S;
-  S.M = 10;
-  S.X = 0.142857;
-  printf("testSimple: %d %f\n", S.M, S.X);
+  struct Struct1 S1;
+  S1.A = 10;
+  S1.B = 0.142857;
+  struct Struct2 S2;
+  S2.M = 100;
+  S2.X.A = S1.A;
+  S2.X.B = S1.B;
+
+  // struct Struct2 S22;
+
+  printf("embed_struct: %d %f %d %d\n", S1.A, S1.B, S2.M, S2.X.A);
   return 0;
 }

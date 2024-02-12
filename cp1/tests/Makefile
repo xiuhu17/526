@@ -1,7 +1,7 @@
 LEVEL = ..
 
 ## change or use make TARGET=inputfilename
-TARGET=simple
+TARGET=icmp_user
 
 ## replace LLVMROOT and SROALIB as appropriate
 NETID = `whoami`
@@ -17,7 +17,7 @@ LLVMOPT = /home/zhihaow6/llvm-project8/bin/opt
 ## Other choices: test or comparecfe (these will be provided later)
 default: debug
 DEBUGOPTS =  -verify 
-# -inline -mem2reg -simplifycfg -mem2reg -globalopt -globaldce -instcombine -adce -instcombine -simplifycfg
+#-inline -mem2reg -simplifycfg -mem2reg -globalopt -globaldce -instcombine -adce -instcombine -simplifycfg
 
 testsimple: debug
 debug: $(TARGET).debug.bc
@@ -39,11 +39,11 @@ test: $(TARGET).test.bc
 	$(LLVMDIS) -f $<
 
 %.llvm.bc: %.c
-	$(LLVMGCC) -S -emit-llvm -o - $< | $(LLVMAS) -o=$@
+	$(LLVMGCC) -S -emit-llvm -Xclang -disable-O0-optnone -o - $< | $(LLVMAS) -o=$@
 
 %.debug.bc: %.llvm.bc
 	$(LLVMOPT) $(DEBUGOPTS) < $< | \
-	$(LLVMOPT) -load $(SROALIB) -scalarrepl-zhihaow6 -o=$@
+	$(LLVMOPT) -load $(SROALIB) -scalarrepl-zhihaow6 -adce -o=$@
 
 clean:
 	$(RM) -f *.debug.bc *.test.bc *.llvm.bc *.ll *.s
