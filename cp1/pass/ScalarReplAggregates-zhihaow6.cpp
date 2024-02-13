@@ -62,7 +62,6 @@ namespace {
     // collect all the alloca instructions
     DenseSet<AllocaInst *> worklist_alloca;
     DenseSet<AllocaInst *> marked_worklist_alloca;
-    DenseSet<AllocaInst *> executed_alloca;
 
 
     // insert the alloca function at the beginning of the funciton
@@ -264,26 +263,8 @@ void SROA::Do_Scalar_Expand(Function& F, AllocaInst* Value_Def) {
       IRBuilder<> Builder(Cmp_Inst->getContext());
       Builder.SetInsertPoint(Cmp_Inst->getParent(), std::next(Cmp_Inst->getIterator()));
       if (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_EQ) {
-        // SmallVector<llvm::Value*, 5> Cmp_arr;
-        // for (int i = 0; i < idx_to_alloca.size(); ++ i) {
-        //   Cmp_arr.push_back(Builder.CreateICmpEQ(idx_to_alloca[i], llvm::Constant::getNullValue(idx_to_alloca[i]->getType())));
-        // }
-        // llvm::Value* false_ = llvm::ConstantInt::getFalse(Cmp_Inst->getContext());
-        // for (int i = 0; i < Cmp_arr.size(); ++ i) {
-        //   false_ = Builder.CreateOr(false_, Cmp_arr[i]);
-        // }
-        // Cmp_Substition = false_;
         Cmp_Substition = llvm::ConstantInt::getFalse(Cmp_Inst->getContext());
       } else if (Cmp_Inst->getPredicate() == llvm::ICmpInst::ICMP_NE) {
-        // SmallVector<llvm::Value*, 5> Cmp_arr;
-        // for (int i = 0; i < idx_to_alloca.size(); ++ i) {
-        //   Cmp_arr.push_back(Builder.CreateICmpNE(idx_to_alloca[i], llvm::Constant::getNullValue(idx_to_alloca[i]->getType())));
-        // }
-        // llvm::Value* true_ = llvm::ConstantInt::getTrue(Cmp_Inst->getContext());
-        // for (int i = 0; i < Cmp_arr.size(); ++ i) {
-        //   true_ = Builder.CreateAnd(true_, Cmp_arr[i]);
-        // }
-        // Cmp_Substition = true_;
         Cmp_Substition = llvm::ConstantInt::getTrue(Cmp_Inst->getContext());
       }
       Cmp_Inst->replaceAllUsesWith(Cmp_Substition);
@@ -344,7 +325,6 @@ void SROA::Update_Wrapper(Function& F, DominatorTree& DT) {
     Reinitialize_WL(F);
     counter ++;
   }
-  dbgs() << "This runs: " << counter << "\n";
 }
 
 bool SROA::runOnFunction(Function &F) {
@@ -353,9 +333,9 @@ bool SROA::runOnFunction(Function &F) {
   // initialization
   worklist_alloca.clear();
   marked_worklist_alloca.clear();
-  executed_alloca.clear();
   DominatorTree& DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   LLVMContext& Context = F.getContext();
+  Transform_Mem2Reg(F, DT);
   Reinitialize_WL(F);
 
   // do the expansion and promotaion
@@ -368,7 +348,7 @@ bool SROA::runOnFunction(Function &F) {
     }
   }
   
-  dbgs() << NumReplaced << " " << NumPromoted << "\n";
+  dbgs() << "NumReplaced: " << NumReplaced << " NumPromoted: "<< NumPromoted << "\n";
   dbgs() << F.getName() << "                               \n";
 
   return true;
