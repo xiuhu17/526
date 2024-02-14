@@ -417,4 +417,4 @@ bool SROA::runOnFunction(Function &F) {
   dbgs() << F.getName() << "                               \n";
 
   return true;
-}
+} 
