@@ -418,6 +418,3 @@ bool SROA::runOnFunction(Function &F) {
 
   return true;
 }
-
-
-
